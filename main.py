@@ -145,7 +145,7 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
         for image, label in get_batches_fn(batch_size):
             _, loss = sess.run([train_op, cross_entropy_loss], 
                         feed_dict= {input_image : image, correct_label : label, keep_prob : 0.5, learning_rate : 0.0001})
-            print("Epoch %d of %d. Training Loss is {%.4f}", i, epochs, loss)
+            print("Epoch {} of {}. Training Loss is {}", i, epochs, loss)
             
     print("Training is complete")
 tests.test_train_nn(train_nn)
@@ -183,7 +183,7 @@ def run():
         nn_last_layer = layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes)
         logits, train_op, cross_entropy_loss = optimize(nn_last_layer, correct_label, learning_rate, num_classes)
 
-        epochs = 10 
+        epochs = 2 
         batch_size =1 
         # TODO: Train NN using the train_nn function
         train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input_image,
