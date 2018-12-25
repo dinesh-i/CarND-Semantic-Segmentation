@@ -59,14 +59,16 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     """
     # TODO: Implement function
     # 1 x 1 convolution for vgg layer 7
-    layer_7_out = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding='same',
+    layer_7_out = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, 1, padding='same',
                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
 
     # upsample layer 4
     layer_4_in_1 = tf.layers.conv2d_transpose(layer_7_out, num_classes, 4, 2, padding='same',
+                    kernel_initializer=tf.truncated_normal_initializer(stddev=0.01),
                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
     # 1 x 1 convolution for vgg layer 7
-    layer_4_in_2 = tf.layers.conv2d_transpose(vgg_layer4_out, num_classes, 1, padding='same',
+    layer_4_in_2 = tf.layers.conv2d_transpose(vgg_layer4_out, num_classes, 1, 1, padding='same',
+                    kernel_initializer=tf.truncated_normal_initializer(stddev=0.01),
                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
 
     # skip connection
@@ -75,9 +77,11 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
 
     # upsample layer 3
     layer_3_in_1 = tf.layers.conv2d_transpose(layer_4_out, num_classes, 4, 2, padding='same',
+                    kernel_initializer=tf.truncated_normal_initializer(stddev=0.01),
                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
     # 1 x 1 convolution for vgg layer 7
-    layer_3_in_2 = tf.layers.conv2d_transpose(vgg_layer3_out, num_classes, 1, padding='same',
+    layer_3_in_2 = tf.layers.conv2d_transpose(vgg_layer3_out, num_classes, 1, 1, padding='same',
+                    kernel_initializer=tf.truncated_normal_initializer(stddev=0.01),
                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
 
     # skip connection
@@ -85,6 +89,7 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
 
     # upsample
     nn_last_layer = tf.layers.conv2d_transpose(layer_3_out, num_classes, 16, 8, padding='same',
+                    kernel_initializer=tf.truncated_normal_initializer(stddev=0.01),
                     kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
 
     return nn_last_layer
@@ -103,9 +108,9 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     # TODO: Implement function
     print("Initiating optimization process")
     logits = tf.reshape(nn_last_layer, (-1, num_classes))
-    correct_label = tf.reshape(correct_label, (-1, num_classes))
+    labels = tf.reshape(correct_label, (-1, num_classes))
 
-    cross_entropy_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=correct_label))
+    cross_entropy_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=labels))
 
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
     train_op = optimizer.minimize(cross_entropy_loss)
@@ -139,8 +144,8 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
         print("Epoch {} ", i+1)
         for image, label in get_batches_fn(batch_size):
             _, loss = sess.run([train_op, cross_entropy_loss], 
-                        feed_dict= {input_image : image, correct_label : label, keep_prob : 0.5, learning_rate : 0.001})
-            print("Loss is {}", loss)
+                        feed_dict= {input_image : image, correct_label : label, keep_prob : 0.5, learning_rate : 0.0001})
+            print("Epoch %d of %d. Training Loss is {%.4f}", i, epochs, loss)
             
     print("Training is complete")
 tests.test_train_nn(train_nn)
@@ -178,7 +183,7 @@ def run():
         nn_last_layer = layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes)
         logits, train_op, cross_entropy_loss = optimize(nn_last_layer, correct_label, learning_rate, num_classes)
 
-        epochs = 1 
+        epochs = 10 
         batch_size =1 
         # TODO: Train NN using the train_nn function
         train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input_image,
