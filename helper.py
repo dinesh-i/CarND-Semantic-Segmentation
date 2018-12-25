@@ -74,6 +74,8 @@ def maybe_download_pretrained_vgg(data_dir):
 
 		# Remove zip file to save space
 		os.remove(os.path.join(vgg_path, vgg_filename))
+	else:
+		print('Pretrained model already exists. Not downloading again...')
 
 
 def gen_batch_function(data_folder, image_shape):
